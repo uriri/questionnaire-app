@@ -1,6 +1,7 @@
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views import generic
 
 from .models import Choice, Question
@@ -11,7 +12,9 @@ class IndexView(generic.ListView):
     context_object_name = "latest_questions"
 
     def get_queryset(self):
-        return Question.objects.order_by("-publish_at")[:5]
+        return Question.objects.filter(publish_at__lte=timezone.now()).order_by(
+            "-publish_at"
+        )[:5]
 
 
 class DetailView(generic.DetailView):
@@ -19,6 +22,10 @@ class DetailView(generic.DetailView):
 
     model = Question
     template_name = "polls/detail.html"
+
+    def get_queryset(self):
+        """非公開のquestionを除外する"""
+        return Question.objects.filter(publish_at__lte=timezone.now())
 
 
 class ResultsView(generic.DetailView):
